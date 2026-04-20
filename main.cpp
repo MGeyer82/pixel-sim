@@ -3,11 +3,14 @@
 #include <SFML/Main.hpp>
 #include <SFML/Graphics.hpp>
 
+#define RGBA_SIZE 4	// each RGBA pixel buffer 'index' consists of 4 uint8_t values (R, G, B, A)
+
 //TODO: Next steps:
 //	- Change color of particles drawn via button press
 //	- Make particles fall "naturally" (not just in a straight line)
 //	- Add different types of particles (much more involved change)
 
+// Screen dimensions and cell size in pixels
 unsigned int screen_width = 800;
 unsigned int screen_height = 600;
 int cell_size = 5; // square cells, so only one dimension is needed
@@ -16,19 +19,22 @@ int cell_size = 5; // square cells, so only one dimension is needed
 int grid_row_size = screen_width / cell_size;  // 160 (159 w/ zero index)
 int grid_col_size = screen_height / cell_size; // 120 (119 w/ zero index)
 
-std::vector<int> grid(grid_row_size* grid_col_size, 0);
-std::vector<uint8_t> pixels(screen_width* screen_height * 4, 0); // RGBA pixel buffer for the entire screen
+// Grid and pixels describe the screen space in different ways 
+// (grid: 5x5 pixel cells, pixels: individual RGBA values for each pixel), but they are kept in sync by 
+// the drawCellToBuffer and clearCellFromBuffer functions
+std::vector<int> grid{ grid_row_size * grid_col_size, 0 };			 // 2D grid represented as a 1D vector
+std::vector<uint8_t> pixels(screen_width * screen_height * RGBA_SIZE, 0); // RGBA pixel buffer for the entire screen
 
-// helper function to access specific grid cells
+// Helper function to easily access grid cells using x and y coordinates
 inline int& cell(int x, int y)
 {
 	return grid[y * grid_row_size + x];
 }
 
-// set the RGBA values for the pixel at the specified coordinates
+// Set the passed RGBA values for the pixel at the specified coordinates
 inline void setPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 {
-	int index = (y * screen_width + x) * 4; // Calculate the index for RGBA
+	int index = (y * screen_width + x) * RGBA_SIZE; // Calculate the index for RGBA buffer
 	pixels[index] = r;     // Red
 	pixels[index + 1] = g; // Green
 	pixels[index + 2] = b; // Blue
@@ -270,7 +276,6 @@ int main()
 	std::vector<sf::Vector2i> active_cells;		  // Store the positions of active cells for optimized updates
 	std::vector<sf::Vector2i> next_active_cells;  // Store the positions of cells that will become active in the next frame
 
-	active_cells.push_back({ 80, 10 });
 	cell(80, 10) = 1;
 	drawCellToBuffer(80, 10);
 
